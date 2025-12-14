@@ -4,7 +4,7 @@ let currentSymbol = "AAPL";
 let currentPrice = 100;
 
 function startWebSocketServer(server) {
-  const wss = new WebSocketServer({ port: 4000 });
+  const wss = new WebSocketServer({ server });
 
   console.log("WebSocket Server running on port 4000");
 
