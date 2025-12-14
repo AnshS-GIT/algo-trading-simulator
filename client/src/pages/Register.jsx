@@ -16,6 +16,9 @@ const Register = () => {
     const { name, email, password } = formData;
 
     useEffect(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+
         if (error) setError(null);
     }, [formData]);
 
