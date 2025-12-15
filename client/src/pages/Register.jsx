@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 
-const Register = () => {
+const Register = ({ setUser }) => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -33,6 +32,7 @@ const Register = () => {
             const res = await api.post('/auth/register', formData);
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data));
+            setUser(res.data);
             navigate('/');
         } catch (err) {
             console.error("Register Error:", err);

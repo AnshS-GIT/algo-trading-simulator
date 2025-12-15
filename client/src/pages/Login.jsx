@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../utils/api';
 
-const Login = () => {
+const Login = ({ setUser }) => {
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -37,6 +37,7 @@ const Login = () => {
 
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data));
+            setUser(res.data);
 
             // Navigate back to where they came from
             navigate(from, { replace: true });

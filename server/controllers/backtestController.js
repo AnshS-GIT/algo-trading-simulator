@@ -38,8 +38,23 @@ export const runBacktest = async (req, res) => {
         };
 
         // Call Python Service
-        const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || 'http://localhost:8000';
-        const response = await axios.post(`${pythonServiceUrl}/run-backtest`, pythonPayload);
+        let pythonServiceUrl = process.env.PYTHON_SERVICE_URL;
+        if (!pythonServiceUrl) {
+            pythonServiceUrl = process.env.NODE_ENV === 'production'
+                ? 'https://algo-trading-simulator-1.onrender.com'
+                : 'http://localhost:8000';
+        }
+
+        let response;
+        try {
+            response = await axios.post(`${pythonServiceUrl}/run-backtest`, pythonPayload);
+        } catch (error) {
+            console.error('Python Service Connection Error:', error.message);
+            if (error.code === 'ECONNREFUSED' || error.response?.status === 404) {
+                 throw new Error(`Python service unreachable at ${pythonServiceUrl}. Ensure it is running and accessible.`);
+            }
+            throw error;
+        }
         const result = response.data;
         
         if (result && result.backtest) {

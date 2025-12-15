@@ -34,8 +34,8 @@ function App() {
         <main className="flex-grow w-full flex justify-center">
           <div className="w-full max-w-[1400px] p-6">
             <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login setUser={setUser} />} />
+              <Route path="/register" element={<Register setUser={setUser} />} />
               <Route
                 path="/"
                 element={
