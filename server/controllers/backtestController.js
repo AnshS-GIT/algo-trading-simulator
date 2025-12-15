@@ -38,22 +38,41 @@ export const runBacktest = async (req, res) => {
         };
 
         // Call Python Service
-        let pythonServiceUrl = process.env.PYTHON_SERVICE_URL;
-        if (!pythonServiceUrl) {
-            pythonServiceUrl = process.env.NODE_ENV === 'production'
+        let pythonServiceUrl =
+            process.env.PYTHON_SERVICE_URL ||
+            (process.env.NODE_ENV === 'production'
                 ? 'https://algo-trading-simulator-1.onrender.com'
-                : 'http://localhost:8000';
+                : 'http://localhost:8000');
+
+        // Normalize to avoid double slashes when concatenating
+        pythonServiceUrl = pythonServiceUrl.replace(/\/$/, '');
+
+        const endpointsToTry = ['/run-backtest', '/run-strategy'];
+        let response;
+        let lastError;
+
+        for (const endpoint of endpointsToTry) {
+            try {
+                response = await axios.post(`${pythonServiceUrl}${endpoint}`, pythonPayload, { timeout: 20000 });
+                break; // Success
+            } catch (error) {
+                lastError = error;
+                const status = error.response?.status;
+                // If the endpoint does not exist, try the next fallback
+                if (status === 404) {
+                    continue;
+                }
+                // Connection level errors
+                if (error.code === 'ECONNREFUSED') {
+                    throw new Error(`Python service unreachable at ${pythonServiceUrl}. Ensure it is running and accessible.`);
+                }
+                throw error;
+            }
         }
 
-        let response;
-        try {
-            response = await axios.post(`${pythonServiceUrl}/run-backtest`, pythonPayload);
-        } catch (error) {
-            console.error('Python Service Connection Error:', error.message);
-            if (error.code === 'ECONNREFUSED' || error.response?.status === 404) {
-                 throw new Error(`Python service unreachable at ${pythonServiceUrl}. Ensure it is running and accessible.`);
-            }
-            throw error;
+        if (!response) {
+            const status = lastError?.response?.status || 'unknown';
+            throw new Error(`Python service unreachable at ${pythonServiceUrl}. Last status: ${status}`);
         }
         const result = response.data;
         
