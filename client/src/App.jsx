@@ -10,6 +10,8 @@ import Profile from "./pages/Profile";
 import History from "./pages/History";
 import { checkSession, logout } from './utils/auth';
 
+import PublicRoute from "./utils/PublicRoute";
+
 function App() {
   useWebSocket();
   const [user, setUser] = useState(null);
@@ -34,8 +36,22 @@ function App() {
         <main className="flex-grow w-full flex justify-center">
           <div className="w-full max-w-[1400px] p-6">
             <Routes>
-              <Route path="/login" element={<Login setUser={setUser} />} />
-              <Route path="/register" element={<Register setUser={setUser} />} />
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute user={user}>
+                    <Login setUser={setUser} />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute user={user}>
+                    <Register setUser={setUser} />
+                  </PublicRoute>
+                }
+              />
               <Route
                 path="/"
                 element={

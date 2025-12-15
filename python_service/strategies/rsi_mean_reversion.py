@@ -1,5 +1,5 @@
 import pandas as pd
-import pandas_ta as ta
+import numpy as np
 
 def required_parameters():
     return {
@@ -7,6 +7,33 @@ def required_parameters():
         "oversold": "int",
         "overbought": "int"
     }
+
+def calculate_rsi(series, period=14):
+    """
+    Calculate RSI using Wilder's Smoothing method (Standard).
+    """
+    delta = series.diff()
+    
+    # Get gains (positive delta) and losses (negative delta)
+    gain = delta.where(delta > 0, 0.0)
+    loss = -delta.where(delta < 0, 0.0)
+    
+    # Calculate initial average gain/loss
+    avg_gain = gain.rolling(window=period, min_periods=period).mean()
+    avg_loss = loss.rolling(window=period, min_periods=period).mean()
+    
+    # Calculate smoothed averages (Wilder's Method)
+    # The first value is the simple average, subsequent are smoothed
+    # We can use ewm (Exponential Weighted Moving Average) with alpha=1/period to approximate Wilder's
+    # Wilder's Smoothing is equivalent to EMA with alpha = 1/period
+    
+    avg_gain = gain.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+    avg_loss = loss.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    
+    return rsi
 
 def generate_signals(df, params):
     """
@@ -19,15 +46,11 @@ def generate_signals(df, params):
     if len(df) < period:
         return []
 
-    # Calculate RSI using pandas_ta
-    # We copy the series to avoid SettingWithCopy warnings on the original df if it's a view
-    # But since we are inside a function and df is usually passed by reference, we can just assign to a new col
-    # or use ta.rsi() which returns a Series
-    
+    # Calculate RSI using pure pandas
     try:
-        rsi_series = ta.rsi(df['close'], length=period)
+        rsi_series = calculate_rsi(df['close'], period)
     except Exception as e:
-        # Fallback if pandas_ta has issues or df is weird
+        print(f"Error calculating RSI: {e}")
         return []
 
     if rsi_series is None:
@@ -36,10 +59,11 @@ def generate_signals(df, params):
     signals = []
     
     # Iterate
+    # Start from period index
     for i in range(period, len(df)):
         rsi_val = rsi_series.iloc[i]
         
-        # Check if NaN
+        # Check for NaN
         if pd.isna(rsi_val):
             continue
             
