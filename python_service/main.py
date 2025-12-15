@@ -20,6 +20,10 @@ def read_root():
 def health_check():
     return {"status": "ok"}
 
+@app.post("/test")
+def test_endpoint(payload: Dict[str, Any]):
+    return {"status": "ok", "payload_received": payload}
+
 @app.post("/run-strategy")
 @app.post("/run-backtest")
 def execute_strategy(request: StrategyRequest):
