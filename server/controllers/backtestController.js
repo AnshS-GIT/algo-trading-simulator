@@ -38,7 +38,8 @@ export const runBacktest = async (req, res) => {
         };
 
         // Call Python Service
-        const response = await axios.post('http://localhost:8000/run-backtest', pythonPayload);
+        const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || 'http://localhost:8000';
+        const response = await axios.post(`${pythonServiceUrl}/run-backtest`, pythonPayload);
         const result = response.data;
         
         if (result && result.backtest) {
