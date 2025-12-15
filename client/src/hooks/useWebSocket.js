@@ -6,7 +6,7 @@ export default function useWebSocket() {
 
   useEffect(() => {
     function connect() {
-      wsRef.current = new WebSocket("ws://localhost:5002");
+      wsRef.current = new WebSocket("wss://algo-trading-simulator.onrender.com");
 
       wsRef.current.onopen = () => {
         console.log("WebSocket connected");
